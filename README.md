@@ -57,6 +57,7 @@ make install
 >>> import cv2
 >>> cv2.__version__
 '3.1.0-dev'
+>>> help(cv2.text)
   ```
 
 ## Usage
