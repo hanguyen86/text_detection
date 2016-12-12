@@ -2,7 +2,7 @@
 
 This project aims to detect textes in images using **Extremal Region Filter** algorithm.
 
-![Matching result]('./demo.jpg')
+![Matching result](/demo.jpg)
 
 ## Installation OpenCV on Mac OS
 This is summarized from http://www.pyimagesearch.com/2015/06/15/install-opencv-3-0-and-python-2-7-on-osx/
@@ -69,7 +69,7 @@ python text.py -h
 An example:
 
 ```
-python feature.py  -m  <1: Detection using Extremal Region Filter, 2: OCR Recognition using Tesseract> \
+python text.py  -m  <1: Detection using Extremal Region Filter, 2: OCR Recognition using Tesseract> \
 		           -i <path to input image> \
 		           -o <path to output image>
 ```
