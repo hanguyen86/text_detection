@@ -39,10 +39,9 @@ class TextDetector:
     # Main methods
     #--------------------------------------------------------
     
-    # Extract features in the image using a specific Detector/Descriptor
+    # Extract text locations in the image using a ER method
     # input:    showResult
-    # return:   number of keypoints
-    #           description of each keypoint
+    # return:   array of text regions
     def extract(self, showResult = False):
         
         # Extract channels to be processed individually
@@ -74,37 +73,28 @@ class TextDetector:
                                         [r.tolist() for r in regions])
             # save regions
             [self.regions.append(rect) for rect in rects]
-
-        # Visualization
-        vis = self.origin_image.copy()
+            
+        if showResult:
+            return self.showRegions()
+        
+        return None
+    
+    # draw detected text regions
+    def showRegions(self):
+        output = self.origin_image.copy()
         for r in range(0, np.shape(self.regions)[0]):
             rect = self.regions[r]
-            cv2.rectangle(vis,
+            cv2.rectangle(output,
                           (rect[0],rect[1]),
                           (rect[0]+rect[2],
                            rect[1]+rect[3]),
-                          (0, 0, 0), 2)
-            cv2.rectangle(vis,
+                          (0, 255, 0), 2)
+            cv2.rectangle(output,
                           (rect[0],rect[1]),
                           (rect[0]+rect[2],
                            rect[1]+rect[3]),
-                          (255, 255, 255), 1)
-        
-        return vis
-#            cv2.imshow("Text detection result", vis)
-#            cv2.waitKey(0)
-    
-    # draw keypoints & descriptors on origin image
-    def showFeatures(self):
-        if not self.detector.keypoints:
-            print('Keypoint not found!')
-            return None
-        
-        cv2.drawKeypoints(self.origin_image,
-                          self.detector.keypoints,
-                          self.origin_image,
-                          (0, 255, 0))
-        return self.origin_image
+                          (255, 0, 0), 1)
+        return output
         
 #--------------------------------------------------------
 #--------------------------------------------------------
@@ -135,7 +125,6 @@ def main(argv):
         print("Invalid method: " + args['method'])
         return
     
-    # find keypoints & build descriptor on input1 image
     detector = TextDetector(args['input'])
     output = detector.extract(method == 1)
     
