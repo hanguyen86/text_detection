@@ -163,10 +163,17 @@ def main(argv):
     #                -i test/scenetext_segmented_word04.jpg
     #                -o .
     parser = argparse.ArgumentParser(description='Scene Text Detection and Recognition')
-    parser.add_argument('-m','--method',
+    parser.add_argument('-t','--task',
                         help="""Specify method:
                         1: Detection using Extremal Region Filter,
                         2: OCR Recognition using Tesseract
+                        """,
+                        required=True)
+    parser.add_argument('-m','--method',
+                        help="""Method for OCR:
+                        1: HMMDecoder,
+                        2: BeamSearchCNN,
+                        3: Tesseract
                         """,
                         required=True)
     parser.add_argument('-i','--input',
@@ -178,18 +185,19 @@ def main(argv):
     args = vars(parser.parse_args())
     
     # extract arguments
+    task = int(args['task'])
     method = int(args['method'])
-    
-    if method != 1 and method != 2:
-        print("Invalid method: " + args['method'])
-        return
-    
     detector = TextDetector(args['input'])
-    output = detector.extract(method == 1)
     
-    # save output
-    cv2.imwrite(args['output'] + '/output.jpg', output)
-    print("Output saved!")
+    if task == 1:
+        output = detector.extract(True)
+        cv2.imwrite(args['output'] + '/output.jpg', output)
+        print("Output saved!")
+    elif task == 2:
+        print(detector.recognize(args['method']))
+    else:
+        print("Invalid task: " + args['task'])
+        return
     
 if __name__ == '__main__':
     main(sys.argv)
