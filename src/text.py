@@ -19,7 +19,7 @@ class TextDetector:
         self.gray_image   = cv2.cvtColor(self.origin_image,
                                          cv2.COLOR_BGR2GRAY)
         
-        self.ER_GROUPING_ORIENTATION = 0#cv2.text.ERGROUPING_ORIENTATION_ANY
+        self.ER_GROUPING_ORIENTATION = cv2.text.ERGROUPING_ORIENTATION_ANY
         
         # load pre-trained ER classifiers
         fileERClassifier1 = cv2.text.loadClassifierNM1(
@@ -66,11 +66,11 @@ class TextDetector:
                                             [r.tolist() for r in regions],
                                             cv2.text.ERGROUPING_ORIENTATION_ANY,
                                             './data/trained_classifier_erGrouping.xml',
-                                            0.5)
+                                            0.7)
             else:
                 rects = cv2.text.erGrouping(self.origin_image,
-                                        channel,
-                                        [r.tolist() for r in regions])
+                                            channel,
+                                            [r.tolist() for r in regions])
             # save regions
             [self.regions.append(rect) for rect in rects]
             
@@ -78,6 +78,19 @@ class TextDetector:
             return self.showRegions()
         
         return None
+    
+    # perform OCR recognition on image: BeamSearchDecoder of HMMDecoder
+    # input:  image
+    # output: string
+    def recognize(self, methodId):
+        methodName = [
+            'HMMDecoderParser',
+            'BeamSearchCNNParser',
+            'TesseractParser'
+        ][methodId - 1]
+        
+        ocrer = eval(methodName)()
+        return ocrer.parse(self.gray_image)
     
     # draw detected text regions
     def showRegions(self):
@@ -95,6 +108,52 @@ class TextDetector:
                            rect[1]+rect[3]),
                           (255, 0, 0), 1)
         return output
+    
+#--------------------------------------------------------
+#--------------------------------------------------------
+# Class provide an interface to perform OCR
+class OCRParser:
+    
+    def __init__(self):
+        self.ocrer = None
+    
+    def parser(self, image):
+        return self.ocrer.run(image, 0.5)
+
+# class provides an interface for OCR using Hidden Markov Models
+# http://docs.opencv.org/3.1.0/d0/d74/classcv_1_1text_1_1OCRHMMDecoder.html
+class HMMDecoderParser(OCRParser):
+    
+    def __init__(self):
+        self.vocabulary = 
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        self.ocrer = cv2.text.OCRBeamSearchDecoder_create(
+            loadOCRHMMClassifierCNN("OCRHMM_knn_model_data.xml.gz"),
+            self.vocabulary,
+            cv2.cv.Load("OCRHMM_transitions_table.xml"),
+            np.eye(62, 62, dtype='float')
+        )
+
+# class provides an interface for OCR using Beam Search algorithm
+# http://docs.opencv.org/3.1.0/da/d07/classcv_1_1text_1_1OCRBeamSearchDecoder.html
+class BeamSearchCNNParser(OCRParser):
+    
+    def __init__(self):
+        self.vocabulary = 
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        self.ocrer = cv2.text.OCRBeamSearchDecoder_create(
+            loadOCRBeamSearchClassifierCNN("OCRBeamSearch_CNN_model_data.xml.gz"),
+            self.vocabulary,
+            cv2.cv.Load("OCRHMM_transitions_table.xml"),
+            np.eye(62, 62, dtype='float')
+        )
+
+# class provides an interface with the tesseract-ocr API (v3.02.02) in C++
+# http://docs.opencv.org/3.1.0/d7/ddc/classcv_1_1text_1_1OCRTesseract.html
+class TesseractParser(OCRParser):
+    
+    def __init__(self):
+        self.ocrer = cv2.text.OCRTesseract_create()
         
 #--------------------------------------------------------
 #--------------------------------------------------------
